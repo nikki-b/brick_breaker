@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>BrickBreaker!</title>
+	<style>
+		body{
+			background-image: url('clouds.gif')
+		}
+		canvas{
+			background: #ecf0f1;
+		}
+		div{
+			display: flex;
+		  align-items: center;
+		  justify-content: center;
+		}
+	</style>
+</head>
+<body>
+	<div>
+		<canvas id = "gameCanvas" height="400" width="600"></canvas>
+	</div>
+	<script>
+
+		var canvas = document.getElementById("gameCanvas");
+		// console.log(canvas);
+		// set context so can draw on canvas
+		var cx = canvas.getContext("2d");
+		// BALL - setup
+		var ballX = canvas.width/2;
+		var ballY = canvas.height-10-15;
+		var ballRadius = 10;
+		// BALL - movement
+		var moveX = 1;
+		var moveY = -1;
+		// PADDLE - setup
+		var paddleX = canvas.width/2-30;
+		var paddleY = canvas.height-15;
+		var paddleHeight = 20;
+		var paddleWidth = 75;
+		// BRICKS - setup
+		var brickHeight = 30;
+		var brickWidth = 70;
+		// BRICKS - data
+		var map = [
+			[1,1,2,1,1],
+			[1,2,2,2,1],
+			[2,2,3,2,2],
+		]
+		var bricks = [];
+		for(var rows = 0; rows < map.length; rows++){
+			bricks[rows] = [];
+			for(var cols = 0; cols < map[rows].length; cols++){
+				bricks[rows][cols] = {x: 0, y:0, check:0, color: map[rows][cols]}
+			}
+		}
+		// console.log(bricks);
+		// POINTS - setup
+		var points = 0;
+
+		// EVENT LISTENERS
+		var leftPress = false;
+		var rightPress = false;
+		document.addEventListener("keydown", keyDownListen, false);
+		document.addEventListener("keyup", keyUpListen, false);
+
+		function keyDownListen(e){
+			// console.log(e.keyCode);
+			if(e.keyCode === 37){
+				leftPress = true;
+			}
+			else if(e.keyCode === 39){
+				rightPress = true;
+			}
+		}
+		function keyUpListen(e){
+			// console.log(e.keyCode);
+			if(e.keyCode === 37){
+				leftPress = false;
+			}
+			else if(e.keyCode === 39){
+				rightPress = false;
+			}
+		}
+
+		function drawBall(){
+			// clear canvas everytime to avoid ball trail
+			cx.clearRect(0, 0,canvas.width, canvas.height);
+			cx.beginPath();
+			cx.arc(ballX, ballY, ballRadius, 0, Math.PI*2);
+			cx.fillStyle = "#2ecc71";
+			cx.fill();
+			cx.closePath();
+		}
+
+		function drawPaddle(){
+			cx.beginPath();
+			cx.rect(paddleX, paddleY, paddleWidth, paddleHeight);
+			cx.fillStyle = "#3498db";
+			cx.fill();
+			cx.closePath();
+		}
+
+		function drawBricks(){
+			var buff = 30;
+			for(var i = 0; i < bricks.length; i ++){
+				for(var j = 0; j < bricks[i].length; j++){
+					if(bricks[i][j].check === 0){
+						// only active bricks
+						var brick = bricks[i][j];
+						var brickX = (j * (brickWidth + ballRadius*4)) + 30 + ballRadius; // across
+						var brickY = (i * (brickHeight + ballRadius*2)) + 20 + ballRadius; // down
+						brick.x = brickX;
+						brick.y = brickY;
+						cx.beginPath();
+						cx.rect(brickX, brickY, brickWidth, brickHeight);
+						if(brick.color == 1) { cx.fillStyle = "#9b59b6"; }
+						if(brick.color == 2) { cx.fillStyle = "#f1c40f"; }
+						if(brick.color == 3) { cx.fillStyle = "#1abc9c"; }
+						cx.fill();
+						cx.closePath();
+					}
+				}
+			}
+		}
+
+		function collisionDetection(){
+			// check brick data
+			for(var i = 0; i < bricks.length; i++){
+				for(var j = 0; j < bricks[i].length; j++){
+					var brick = bricks[i][j];
+					if(brick.check === 0){
+						var hit = false;
+						// ball hits top or bottom
+						if(ballY == brick.y - ballRadius || ballY == brick.y + brickHeight + ballRadius){
+							if(ballX >= brick.x - ballRadius && ballX <= brick.x + brickWidth + ballRadius){
+								moveY = -moveY;
+								hit = true;
+							}
+						}
+						// ball hits left or right
+						else if(ballX == brick.x - ballRadius || ballX == brick.x + brickWidth + ballRadius){
+							if(ballY >= brick.y - ballRadius && ballY <= brick.y + brickHeight + ballRadius){
+								moveX = -moveX;
+								hit = true;
+							}
+						}
+						// check if hit made
+						if(hit){
+							// update brick
+							brick.check = 1;
+							points += 1;
+						}	
+					}
+				}
+			}
+		}
+
+		// setup draw function with interval
+		function draw(){
+			drawBall();
+			drawPaddle();
+			drawBricks();
+			// points display
+			cx.fillText("Points: " + points, canvas.width/2 - 25, 15);
+			collisionDetection();
+			// winner? 
+			if(points == bricks.length * bricks[0].length){
+				alert("Winner!");
+				location.reload();
+			}
+			// move paddle position based on listeners
+			if(leftPress && paddleX + paddleWidth > paddleWidth){
+				// console.log("can move");
+				paddleX -= 5;
+			}
+			else if(rightPress && paddleX + paddleWidth < canvas.width){
+				// console.log("can move");
+				paddleX += 5;
+			}
+			// check if near a wall
+			if(ballX + moveX > canvas.width - ballRadius || ballX + moveX < ballRadius){
+				// hit sides
+				moveX = -moveX;
+			}
+			if(ballY + moveY < ballRadius){
+				// hit top
+				moveY = -moveY;
+			}
+			if(ballY + moveY > canvas.height - paddleHeight){
+				// at the bottom
+				// check for paddle
+				if(ballX >= paddleX - ballRadius && ballX <= paddleX + paddleWidth + ballRadius){
+					// console.log("paddle hit!");
+					moveY = -moveY;
+				}
+				// or hit bottom
+				else{
+					// alert("Game Over!");
+					location.reload();
+				}
+			}
+			// move the ball!
+			ballX += moveX;
+			ballY += moveY;
+		}
+		setInterval(draw, 10);
+		// draw score
+		
+	</script>
+</body>
+</html>
