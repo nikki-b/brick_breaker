@@ -5,19 +5,25 @@
 	<title>BrickBreaker!</title>
 	<style>
 		body{
-			background-image: url('clouds.gif')
+			background: #27ae60;
 		}
 		canvas{
-			background: #ecf0f1;
+			border: 1px dashed lightblue;
+			background: #cce5f6;
 		}
 		div{
 			display: flex;
 		  align-items: center;
 		  justify-content: center;
 		}
+		h2{
+			text-align: center;
+			display: block;
+		}
 	</style>
 </head>
 <body>
+	<h2>Brick 'em Break 'em!</h2>
 	<div>
 		<canvas id = "gameCanvas" height="400" width="600"></canvas>
 	</div>
@@ -163,6 +169,7 @@
 			drawPaddle();
 			drawBricks();
 			// points display
+			cx.fillStyle = "#34495e"
 			cx.fillText("Points: " + points, canvas.width/2 - 25, 15);
 			collisionDetection();
 			// winner? 
