@@ -6,6 +6,7 @@
 	<style>
 		body{
 			background: #27ae60;
+			background-image: url("bg.png");
 		}
 		canvas{
 			border: 1px dashed lightblue;
@@ -174,7 +175,6 @@
 			collisionDetection();
 			// winner? 
 			if(points == bricks.length * bricks[0].length){
-				alert("Winner!");
 				location.reload();
 			}
 			// move paddle position based on listeners
